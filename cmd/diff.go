@@ -37,11 +37,11 @@ func getDiffCmd() *cobra.Command {
 			added := differ.GetAddedLines()
 			removed := differ.GetRemovedLines()
 
-			fmt.Printf("-- THIS: %s\n--THAT: %s\n", args[0], args[1])
+			fmt.Printf("-- THIS: %s\n-- THAT: %s\n", args[0], args[1])
 			fmt.Printf("-- added (%d) --\n", len(added))
-			display.PrintColoredBlock(added, display.GREEN)
+			display.PrintColoredBlock(added, fmt.Sprintf("%s+", display.GREEN))
 			fmt.Printf("-- removed (%d) --\n", len(removed))
-			display.PrintColoredBlock(removed, display.GREEN)
+			display.PrintColoredBlock(removed, fmt.Sprintf("%s-", display.RED))
 			return nil
 		},
 	}

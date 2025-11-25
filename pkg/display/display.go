@@ -14,6 +14,6 @@ func PrintColored(text, color string) {
 
 func PrintColoredBlock(texts []string, color string) {
 	for _, t := range texts {
-		PrintColored(color, t)
+		PrintColored(t, color)
 	}
 }

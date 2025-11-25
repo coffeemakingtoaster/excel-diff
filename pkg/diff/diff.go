@@ -1,88 +1,10 @@
 package diff
 
 import (
-	"fmt"
-	"slices"
+	"strings"
 
 	"github.com/xuri/excelize/v2"
 )
-
-type ExcelLine struct {
-	content  string
-	position int
-}
-
-type ExcelDiffFile struct {
-	f    *excelize.File
-	keys map[string]int
-}
-
-func (edf ExcelDiffFile) getRowHash(row []string, relevantColumnIndizes []int) (string, error) {
-	res := ""
-	for i, val := range row {
-		if slices.Contains(relevantColumnIndizes, i) {
-			res += val
-		}
-	}
-	return res, nil
-}
-
-func (edf *ExcelDiffFile) buildMap(relevantColumns []string) error {
-	ids := []int{}
-	rows, err := edf.f.Rows(edf.f.GetSheetName(edf.f.GetActiveSheetIndex()))
-	if err != nil {
-		return err
-	}
-	for rows.Next() {
-		row, err := rows.Columns()
-		if err != nil {
-			return err
-		}
-		if len(ids) == 0 {
-			for i, col := range row {
-				if slices.Contains(relevantColumns, col) {
-					ids = append(ids, i)
-				}
-			}
-			if len(ids) != len(relevantColumns) {
-				return fmt.Errorf("Not all columns are present")
-			}
-		}
-		key, err := edf.getRowHash(row, ids)
-		if err != nil {
-			return err
-		}
-		if _, ok := edf.keys[key]; !ok {
-			edf.keys[key] = 0
-		}
-		edf.keys[key]++
-
-	}
-	return nil
-}
-
-func (edf *ExcelDiffFile) tidyMap() {
-	obsoleteKeys := []string{}
-	for k, v := range edf.keys {
-		if v == 0 {
-			obsoleteKeys = append(obsoleteKeys, k)
-		}
-	}
-	for _, k := range obsoleteKeys {
-		delete(edf.keys, k)
-	}
-}
-
-func (this *ExcelDiffFile) diff(that *ExcelDiffFile) {
-	for k, v := range that.keys {
-		if _, ok := this.keys[k]; ok {
-			that.keys[k] -= this.keys[k]
-			this.keys[k] -= v
-		}
-	}
-	this.tidyMap()
-	that.tidyMap()
-}
 
 type ExcelDiff struct {
 	this            *ExcelDiffFile
@@ -92,14 +14,13 @@ type ExcelDiff struct {
 }
 
 func loadExcelFile(path string) (*ExcelDiffFile, error) {
-	fmt.Printf("Loading %s\n", path)
 	edf := ExcelDiffFile{}
 	f, err := excelize.OpenFile(path)
 	if err != nil {
 		return nil, err
 	}
 	edf.f = f
-	edf.keys = make(map[string]int)
+	edf.keys = make(map[string]*ExcelLine)
 	return &edf, nil
 }
 
@@ -129,9 +50,9 @@ func (ed *ExcelDiff) GetAddedLines() []string {
 		ed.compute()
 	}
 	res := []string{}
-	for k, v := range ed.that.keys {
-		for range v {
-			res = append(res, k)
+	for _, v := range ed.that.keys {
+		for range v.count {
+			res = append(res, strings.Join(v.content, SEP))
 		}
 	}
 	return res
@@ -143,9 +64,9 @@ func (ed *ExcelDiff) GetRemovedLines() []string {
 		ed.compute()
 	}
 	res := []string{}
-	for k, v := range ed.this.keys {
-		for range v {
-			res = append(res, k)
+	for _, v := range ed.this.keys {
+		for range v.count {
+			res = append(res, strings.Join(v.content, SEP))
 		}
 	}
 	return res
