@@ -8,8 +8,9 @@ import (
 )
 
 type ExcelDiffFile struct {
-	f    *excelize.File
-	keys map[string]*ExcelLine
+	f         *excelize.File
+	keys      map[string]*ExcelLine
+	columnIds []int
 }
 
 func (edf ExcelDiffFile) getRowData(row []string, relevantColumnIndizes []int) (string, []string, error) {
@@ -25,7 +26,7 @@ func (edf ExcelDiffFile) getRowData(row []string, relevantColumnIndizes []int) (
 }
 
 func (edf *ExcelDiffFile) buildMap(relevantColumns []string) error {
-	ids := []int{}
+	ids := edf.columnIds
 	rows, err := edf.f.Rows(edf.f.GetSheetName(edf.f.GetActiveSheetIndex()))
 	if err != nil {
 		return err
@@ -35,7 +36,7 @@ func (edf *ExcelDiffFile) buildMap(relevantColumns []string) error {
 		if err != nil {
 			return err
 		}
-		if len(ids) == 0 {
+		if len(ids) == 0 && len(ids) == 0 {
 			for i, col := range row {
 				if slices.Contains(relevantColumns, col) {
 					ids = append(ids, i)
@@ -56,8 +57,8 @@ func (edf *ExcelDiffFile) buildMap(relevantColumns []string) error {
 			}
 		}
 		edf.keys[key].count++
-
 	}
+	edf.columnIds = ids
 	return nil
 }
 

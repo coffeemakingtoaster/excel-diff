@@ -13,7 +13,7 @@ type ExcelDiff struct {
 	computed        bool
 }
 
-func loadExcelFile(path string) (*ExcelDiffFile, error) {
+func loadExcelFile(path string, columnIds []int) (*ExcelDiffFile, error) {
 	edf := ExcelDiffFile{}
 	f, err := excelize.OpenFile(path)
 	if err != nil {
@@ -21,15 +21,16 @@ func loadExcelFile(path string) (*ExcelDiffFile, error) {
 	}
 	edf.f = f
 	edf.keys = make(map[string]*ExcelLine)
+	edf.columnIds = columnIds
 	return &edf, nil
 }
 
-func LoadExcelDiff(thisPath, thatPath string, columns []string) (*ExcelDiff, error) {
-	this, err := loadExcelFile(thisPath)
+func LoadExcelDiff(thisPath, thatPath string, columns []string, columnIds []int) (*ExcelDiff, error) {
+	this, err := loadExcelFile(thisPath, columnIds)
 	if err != nil {
 		return nil, err
 	}
-	that, err := loadExcelFile(thatPath)
+	that, err := loadExcelFile(thatPath, columnIds)
 	if err != nil {
 		return nil, err
 	}

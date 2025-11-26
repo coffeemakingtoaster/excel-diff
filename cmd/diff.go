@@ -11,6 +11,7 @@ import (
 )
 
 var columns = []string{}
+var columnIds = []int{}
 
 func getDiffCmd() *cobra.Command {
 	var diffCmd = &cobra.Command{
@@ -30,7 +31,7 @@ func getDiffCmd() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			differ, err := diff.LoadExcelDiff(args[0], args[1], columns)
+			differ, err := diff.LoadExcelDiff(args[0], args[1], columns, columnIds)
 			if err != nil {
 				return err
 			}
@@ -45,6 +46,8 @@ func getDiffCmd() *cobra.Command {
 			return nil
 		},
 	}
-	diffCmd.Flags().StringArrayVarP(&columns, "columns", "c", []string{}, "Specify all columns that should be a unique tuple")
+	diffCmd.Flags().StringArrayVarP(&columns, "columns", "c", []string{}, "Specify all column names that should be a unique tuple")
+	diffCmd.Flags().IntSliceVarP(&columnIds, "column-ids", "i", []int{}, "Specify all column ids that should be a unique tuple")
+
 	return diffCmd
 }
